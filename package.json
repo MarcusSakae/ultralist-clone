@@ -1,0 +1,12 @@
+{
+  "name": "ultralist-clone",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "dotnet build -c Release",
+    "poststart": "cp bin/Release/net6.0/* c:/tools/ul"
+  },
+  "author": "",
+  "license": "ISC"
+}
