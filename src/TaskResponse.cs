@@ -1,6 +1,6 @@
-namespace Cheap.Ultralist.Knockoff
+namespace Cheap.Ultralist.KnockOff
 {
-    internal class TaskResponse
+    internal class TaskResult
     {
         public bool Success { get; set; } = false;
         public string Message { get; set; } = "";

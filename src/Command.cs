@@ -1,4 +1,4 @@
-namespace Cheap.Ultralist.Knockoff
+namespace Cheap.Ultralist.KnockOff
 {
 
     public enum ArgumentType
@@ -12,15 +12,19 @@ namespace Cheap.Ultralist.Knockoff
         TextArgument
     }
 
-    // Callback should return true/false for success/failure and a string for the result
-    // Todo: We should upgrade the response to some "CommandResult" or similar
-    public delegate CallbackResponse CommandCallback();
+
+    // To be able to use callbacks later, we need to match the function signatures.
+    // Thus, we provide a delegate for each type of command.
+    //
+    // The reasoning is that we can parse and check an id before calling the callback, preventing
+    // lots of duplicated code in each callback.
+    public delegate CommandResult CommandCallback(string[] args);
+    public delegate CommandResult CommandCallbackId(int id, string[] args);
 
     internal class Command
     {
-        public int? Id { get; set; }
+        public int? Id { get; set; } = null;
 
-        public bool RequiresId { get; set; } = false;
 
         public string Name { get; set; } = "";
 
@@ -28,14 +32,17 @@ namespace Cheap.Ultralist.Knockoff
 
         public bool Exhausts { get; set; } = false;
 
+        public bool ModifiesTasks { get; set; } = false;
+
         public List<string> Aliases = new();
 
-        private CommandCallback _callback;
-
-        public String[] Arguments;
+        public String[] Arguments = new String[0];
 
         // Todo: Maybe remove
         public ArgumentType ArgumentType { get; set; } = ArgumentType.None;
+
+        // The callback that is called when the command is executed
+        private CommandCallback _callback;
 
         //
         public Command(string commandName, CommandCallback callback)
@@ -57,10 +64,9 @@ namespace Cheap.Ultralist.Knockoff
         }
 
         // Executes the command
-        internal CallbackResponse Run()
+        internal CommandResult Run()
         {
-
-            return _callback();
+            return _callback(Arguments);
         }
     }
 }

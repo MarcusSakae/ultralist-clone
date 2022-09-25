@@ -1,41 +1,41 @@
 ﻿using System.Diagnostics;
 
-namespace Cheap.Ultralist.Knockoff
+namespace Cheap.Ultralist.KnockOff
 {
     internal class Program
     {
         private static void Main(string[] args)
         {
-            EnableConsoleDebug();
-
             FileManager fileManager = new();
-            TaskManager taskManager = new(fileManager);
+            TaskManager taskManager = new(fileManager, args.Contains("--notes"));
             CommandManager commandManager = new();
 
             RegisterCommands(fileManager, taskManager, commandManager);
 
             RegisterAliases(commandManager);
 
-            // Parse the arguments into commands
+            // Parse the arguments and fill up the command queue
             commandManager.ParseArgs(args);
-
+           
             // We only want to load tasks if the command manager is not flagged as exhausted
             // i.e.: No need to load anything if the user just wants to see the help message
             if (!commandManager.Exhausted)
             {
-                Command command = new Command("LoadTasks", taskManager.LoadTasks);
-                commandManager.InsertCommand(command);
+                commandManager.InsertCommand(new Command("LoadTasks", taskManager.LoadTasks));
+            }
+
+            // We only want to save to disk if any of the commands actually modifies the tasks            
+            // Note that we queue this up before any of the commands are executed.
+            if (commandManager.ModifiedTasks)
+            {
+                commandManager.QueueCommand(new Command("SaveTasks", taskManager.SaveTasks));
             }
 
             // Execute all commands in the queue
             commandManager.ProcessCommandQueue();
 
-            // Output results
-            foreach (var result in commandManager.Results)
-            {
-                Console.WriteLine(result);
-            }
-
+            // output results
+            UlConsole.Output(commandManager.Results, true);
         }
 
 
@@ -46,23 +46,23 @@ namespace Cheap.Ultralist.Knockoff
             cm.Register("add", tm.AddTask, "Add a task");
             cm.Register("addnote", tm.AddNote, "Adds notes to task");
             cm.Register("archive", tm.Archive, "Archives a task");
-            cm.Register("auth", ServerManager.Auth, "Authenticates you with server");
+            cm.Register("auth", ServerManager.Auth, "Authenticates you with server", false);
             cm.Register("complete", tm.Complete, "Completes a task");
             cm.Register("delete", tm.Delete, "Deletes a task");
             cm.Register("deletenote", tm.DeleteNote, "Deletes a note from a task");
             cm.Register("edit", tm.Edit, "Edits task");
             cm.Register("editnote", tm.EditNote, "Edits a note from a task");
-            cm.Register("help", cm.ShowHelp, "Show this help message", true);
-            cm.Register("init", fm.Init, "Initialize a new tasks.json in the current directory", true);
-            cm.Register("list", tm.List, "List all tasks");
+            cm.Register("help", cm.ShowHelp, "Show this help message", false);
+            cm.Register("init", fm.Init, "Initialize a new tasks.json in the current directory", true, false);
+            cm.Register("list", tm.List, "List all tasks", false);
             cm.Register("prioritize", tm.Prioritize, "Prioritizes a task");
             cm.Register("status", tm.Status, "Shows status of tasks");
-            cm.Register("sync", ServerManager.Sync, "Syncs tasks with server");
+            cm.Register("sync", ServerManager.Sync, "Syncs tasks with server", false);
             cm.Register("unarchive", tm.Unarchive, "Un-archives a task");
             cm.Register("uncomplete", tm.Uncomplete, "Un-completes a task");
             cm.Register("unprioritize", tm.Unprioritize, "Un-prioritizes a task");
-            cm.Register("version", Version, "Shows version of UL");
-            cm.Register("web", ServerManager.Web, "Open your list on ultralist.io");
+            cm.Register("version", Version, "Shows version of UL", false);
+            cm.Register("web", ServerManager.Web, "Open your list on ultralist.io", false);
         }
 
 
@@ -86,18 +86,10 @@ namespace Cheap.Ultralist.Knockoff
 
         // Displays the version of the program
         // Todo: Can we make an automatically incrementing version number for each build?
-        private static (bool, string) Version(string[] args)
+        private static CommandResult Version(string[] args)
         {
-            return (true, "UL version 0.0.1");
+            return new CommandResult("UL version 0.0.2");
         }
 
-        // Setup logging to console
-        private static void EnableConsoleDebug()
-        {
-            ConsoleTraceListener consoleTracer = new();
-            consoleTracer.TraceOutputOptions = TraceOptions.DateTime;
-            Trace.Listeners.Add(consoleTracer);
-            Trace.Indent();            
-        }
     }
 }

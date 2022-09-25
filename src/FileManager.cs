@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Cheap.Ultralist.Knockoff
+namespace Cheap.Ultralist.KnockOff
 {
 
     class FileManager
@@ -10,18 +10,16 @@ namespace Cheap.Ultralist.Knockoff
         string FilePath = Path.Join(Directory.GetCurrentDirectory(), FileName);
 
         //
-        public (bool, string) Init(string[] args)
+        public CommandResult Init(string[] args)
         {
-            Debug.WriteLine("# FileManager init");
-            Debug.WriteLine("\tCurrent directory: " + FilePath);
 
             if (File.Exists(FilePath))
             {
-                return (false, "File 'tasks.json' already exists in this folder!");
+                return new CommandResult(false, "File 'tasks.json' already exists in this folder!");
             }
 
             File.WriteAllText(FilePath, "[]");
-            return (true, "File 'tasks.json' created in this folder!");
+            return new CommandResult(true, "File [green]'tasks.json'[reset] created in this folder!");
         }
 
         public string GetJsonString()

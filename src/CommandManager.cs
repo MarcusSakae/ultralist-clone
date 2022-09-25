@@ -1,10 +1,14 @@
 using System.Diagnostics;
 
-namespace Cheap.Ultralist.Knockoff
+namespace Cheap.Ultralist.KnockOff
 {
     class CommandManager
     {
         public bool Exhausted { get; private set; } = false;
+
+        // Keeps track if any of the executed commands modifies the tasks. (=="do we need to save?")
+        // Todo: Maybe move to task manager. (Why should command manager be aware of tasks?)
+        public bool ModifiedTasks { get; private set; } = false;
 
         // List of all available commands
         private List<Command> _commands = new();
@@ -12,17 +16,22 @@ namespace Cheap.Ultralist.Knockoff
         // List of queued up commands
         private List<Command> _queue = new();
 
+        // List of results from executed commands
         public readonly List<string> Results = new List<string>();
 
+        // Inserts a command to the START of the queue
         public void InsertCommand(Command command)
         {
             _queue.Insert(0, command);
         }
+
+        // Adds a command to the end of the queue
         public void QueueCommand(Command command)
         {
             _queue.Add(command);
         }
 
+        // Adds a command to the end of the queue. Now with arguments!
         public void QueueCommand(Command command, string[] args)
         {
             command.Arguments = args;
@@ -30,23 +39,27 @@ namespace Cheap.Ultralist.Knockoff
         }
 
 
-        // Registers an alias for a command
-        public void Register(string commandName, CommandCallback callback, string description, bool exhausts = false)
+        // Registers a command
+        public void Register(
+            string commandName,
+            CommandCallback callback,
+            string description,
+            bool exhausts = false,
+            bool modifiesTasks = true)
         {
             var command = new Command(commandName, callback);
             command.Description = description;
             command.Exhausts = exhausts;
+            command.ModifiesTasks = modifiesTasks;
             _commands.Add(command);
 
-            // We also try to register the first letter as an alias (if it's not already taken)
-            RegisterAlias(commandName, commandName[0].ToString()); // Adds an alias "i" for "init"
+            // We also try to register the first letter as an alias 
+            // It will fail silently if it's already taken.
+            RegisterAlias(commandName, commandName[0].ToString());
         }
 
-
-
-        //
-        //
-        public (bool, string) ShowHelp(string[] args)
+        // Command callback to show the help text
+        public CommandResult ShowHelp(string[] args)
         {
             Results.Add("Ul, cheap ultralist knockoff for the common man.\n");
 
@@ -57,7 +70,7 @@ namespace Cheap.Ultralist.Knockoff
                 Results.Add($"  {command.Name.PadRight(maxlength)} {command.Description}");
             }
 
-            return (true, "");
+            return new CommandResult();
         }
 
         // Register an alias for a command
@@ -86,7 +99,10 @@ namespace Cheap.Ultralist.Knockoff
         //
         public void ParseArgs(string[] args)
         {
-            // No command provided, lets be friendly and redirect to help
+            //  Filter out all "--" flags
+            args = args.SkipWhile(a => a.StartsWith("--")).ToArray();
+
+            // No command provided? lets be friendly and redirect to help
             if (args.Length == 0)
             {
                 this.Exhausted = true;
@@ -99,21 +115,27 @@ namespace Cheap.Ultralist.Knockoff
             }
 
 
-
             // Find command...
             Command? command = _commands.Find(c => c.Aliases.Contains(args[0]));
 
-            // Handle if the command isnt found.
+            // Command not found?
             if (command == null)
             {
+                this.Exhausted = true;
                 Results.Add($"Unknown command: {args[0]}");
                 return;
             }
 
-            // Handle commands that exhaust the queue
+            // Command exhausts the command queue? (exhaust = prevents further commands)
             if (command.Exhausts)
             {
                 Exhausted = true;
+            }
+
+            // Are the tasks modified? (Do we need to save when done?)
+            if (command.ModifiesTasks)
+            {
+                ModifiedTasks = true;
             }
 
             // Queue up!
@@ -136,19 +158,17 @@ namespace Cheap.Ultralist.Knockoff
                 Command command = _queue[0];
 
                 _queue.RemoveAt(0);
-                CallbackResponse res = command.Run();
+                CommandResult res = command.Run();
                 if (res.Success)
                 {
                     Results.Add(res.Message);
                 }
                 else
                 {
-                    Results.Add("Error: " + res.Message);
+                    Results.Add("[red]Error[reset]: " + res.Message);
                     this.Exhausted = true;
                 }
             } while (!Exhausted);
-
-            Debug.WriteLine("Command queue exhausted");
 
         }
     }

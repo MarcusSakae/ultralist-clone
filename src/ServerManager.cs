@@ -1,18 +1,18 @@
-namespace Cheap.Ultralist.Knockoff
+namespace Cheap.Ultralist.KnockOff
 {
     class ServerManager
     {
-        public static (bool, string) Auth(string[] args)
+        public static CommandResult Auth(string[] args)
         {
             throw new NotImplementedException();
         }
 
-        public static (bool, string) Sync(string[] args)
+        public static CommandResult Sync(string[] args)
         {
             throw new NotImplementedException();
         }
 
-        public static (bool, string) Web(string[] args)
+        public static CommandResult Web(string[] args)
         {
             throw new NotImplementedException();
         }

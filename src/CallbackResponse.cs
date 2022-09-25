@@ -1,14 +1,23 @@
-namespace Cheap.Ultralist.Knockoff
+namespace Cheap.Ultralist.KnockOff
 {
-    public class CallbackResponse
+    public class CommandResult
     {
         public bool Success { get; set; } = false;
         public string Message { get; set; } = "";
 
-        public CallbackResponse(bool success, string message)
+        public CommandResult(bool success, string message)
         {
             Success = success;
             Message = message;
         }
+
+        public CommandResult(string message) : this(true, message)
+        {
+        }
+
+        public CommandResult() : this(true, "")
+        {
+        }
+
     }
 }

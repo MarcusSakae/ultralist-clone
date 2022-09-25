@@ -1,24 +1,55 @@
 using System.Diagnostics;
 using System.Text.Json;
 
-namespace Cheap.Ultralist.Knockoff
+namespace Cheap.Ultralist.KnockOff
 {
-
-
 
     class TaskManager
     {
         List<Task> _tasks = new();
+
         FileManager _fileManager;
 
+        bool ShowNotes = false;
+
         // We want to keep a reference around so that the task manager can trigger a save or load.
-        public TaskManager(FileManager fileManager)
+        public TaskManager(FileManager fileManager, bool showNotes = false)
         {
             _fileManager = fileManager;
+            ShowNotes = showNotes;
         }
 
+        //
+        // Gets a single task by id (string)
+        // Also performs some basic checks to parse id and make sure the task exists.
+        //
+        private TaskResult GetTask(string presumablyAnId)
+        {
+            TaskResult result = new();
+            int taskId;
+            if (!int.TryParse(presumablyAnId, out taskId))
+            {
+                result.Message = "Could not parse todo ID:" + presumablyAnId;
+            }
+            else
+            {
+                result.Task = _tasks.Find(t => t.Id == taskId);
+                if (result.Task == null)
+                {
+                    result.Message = $"No todo with that id.";
+                }
+                else
+                {
+                    result.Success = true;
+                }
+            }
+            return result;
+        }
+
+        //
         // Loads tasks from a json-string
-        public (bool, string) LoadTasks(string[] args)
+        //
+        public CommandResult LoadTasks(string[] args)
         {
             // Todo: We want to decouple the filemanager if we can,
             // so we can use something else, (db, http, etc)
@@ -31,74 +62,59 @@ namespace Cheap.Ultralist.Knockoff
             catch (JsonException e)
             {
                 Debug.WriteLine(e);
-                return (false, "tasks.json is not valid JSON");
+                return new CommandResult(false, "tasks.json is not valid JSON");
             }
             catch (Exception e)
             {
                 Debug.WriteLine(e);
-                return (false, "Unknown error loading tasks.json");
+                return new CommandResult(false, "Unknown error loading tasks.json");
             }
             if (loadedTasks == null)
             {
-                return (false, "Could not load any tasks. Is tasks.json is tasks empty?");
+                return new CommandResult(false, "Could not load any tasks. Is tasks.json is tasks empty?");
             }
             _tasks = loadedTasks;
-            Debug.WriteLine("Tasks loaded!");
-            return (true, "");
+            return new CommandResult();
         }
 
-        //
-        //
-        //
-        private TaskResponse GetTask(string presumablyAnId)
+        public CommandResult SaveTasks(string[] args)
         {
-            TaskResponse response = new();
-            int taskId;
-            if (!int.TryParse(presumablyAnId, out taskId))
-            {
-                response.Message = "Could not parse todo ID:" + presumablyAnId;
-            }
-            else
-            {
-                response.Task = _tasks.Find(t => t.Id == taskId);
-                if (response.Task == null)
-                {
-                    response.Message = $"No todo with that id.";
-                }
-                else
-                {
-                    response.Success = true;
-                }
-            }
-            return response;
+            string jsonString = JsonSerializer.Serialize(_tasks);
+            _fileManager.Save(jsonString);
+            return new CommandResult();
         }
+
 
         //
         // Lists all tasks
         //
-        public (bool, string) List(string[] args)
+        public CommandResult List(string[] args)
         {
             string response = "all\n";
             foreach (Task task in _tasks)
             {
                 response += task.ToString() + "\n";
+                if (ShowNotes)
+                {
+                    response += task.NotesToString();
+                }
             }
-            return (true, response);
+            return new CommandResult(response);
         }
 
 
         //
         //
         //
-        public (bool, string) AddNote(string[] args)
+        public CommandResult AddNote(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.Notes.Add(string.Join(" ", args[1..]));
-            return (true, $"Added note to task {res.Task.Id}");
+            return new CommandResult($"Added note to task [yellow]{res.Task.Id}[reset]");
         }
 
 
@@ -106,176 +122,170 @@ namespace Cheap.Ultralist.Knockoff
         //
         // Archives a task
         //
-        public (bool, string) Archive(string[] args)
+        public CommandResult Archive(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.IsArchived = true;
-            return (true, $"Archived task {res.Task.Id}");
+            return new CommandResult($"Archived task [yellow]{res.Task.Id}[reset]");
         }
 
         //
         // Unarchive task
         //
-        public (bool, string) Unarchive(string[] args)
+        public CommandResult Unarchive(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.IsArchived = false;
-            return (true, $"Unarchived task {res.Task.Id}");
+            return new CommandResult(true, $"Unarchived task [yellow]{res.Task.Id}[reset]");
         }
 
         //
         // Adds a new task
         //
-        public (bool, string) AddTask(string[] args)
+        public CommandResult AddTask(string[] args)
         {
-            Task task = new Task();
+            Task task = new Task(string.Join(" ", args));
             task.Id = _tasks.Count + 1;
             _tasks.Add(task);
-            _fileManager.Save(JsonSerializer.Serialize(_tasks));
-            return (true, $"Task {_tasks.Count} added");
+            return new CommandResult($"Task [yellow]{task.Id}[reset] added.");
         }
 
         //
         // Marks a task as completed
         //
-        public (bool, string) Complete(string[] args)
+        public CommandResult Complete(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.IsCompleted = true;
-            return (true, $"Completed task {res.Task.Id}");
+            return new CommandResult($"Marked task [yellow]'{res.Task.Id}'[reset] as completed.");
         }
 
         //
         // Marks a task as not completed
         //
-        public (bool, string) Uncomplete(string[] args)
+        public CommandResult Uncomplete(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.IsCompleted = false;
-            return (true, $"Uncompleted task {res.Task.Id}");
+            return new CommandResult($"Marked task [yellow]'{res.Task.Id}'[reset] as not completed.");
         }
 
 
         //
         // Deletes a task
         //
-        public (bool, string) DeleteNote(string[] args)
+        public CommandResult DeleteNote(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.Notes.RemoveAt(int.Parse(args[1]));
-            return (true, $"Deleted note {args[1]} from task {res.Task.Id}");
+            return new CommandResult($"Deleted note [blue]{args[1]}[reset] from task [yellow]{res.Task.Id}[reset]");
         }
 
         //
         // Edits a note
         //
-        public (bool, string) EditNote(string[] args)
+        public CommandResult EditNote(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.Notes[int.Parse(args[1])] = string.Join(" ", args[2..]);
-            return (true, $"Note edited.");
+            return new CommandResult($"Note edited.");
         }
 
         //
         // Edits a task
         //
-        public (bool, string) Edit(string[] args)
+        public CommandResult Edit(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.Text = string.Join(" ", args[1..]);
-            return (true, $"Task updated.");
+            return new CommandResult($"Task [yellow]{res.Task.Id}[reset] updated.");
         }
 
         //
         // Delete task
         //
-        public (bool, string) Delete(string[] args)
+        public CommandResult Delete(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
+            int id = res.Task!.Id;
             _tasks.Remove(res.Task!);
-            return (true, $"Task deleted.");
+            return new CommandResult($"Task [yellow]{id}[reset] deleted.");
         }
 
         //
         // Prioritize task
         //
-        public (bool, string) Prioritize(string[] args)
+        public CommandResult Prioritize(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.IsPriority = true;
-            return (true, $"Task prioritized.");
+            return new CommandResult($"Task [yellow]{res.Task.Id}[reset] is now a priority.");
         }
 
         //
         // Unprioritize task
         //
-        public (bool, string) Unprioritize(string[] args)
+        public CommandResult Unprioritize(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.IsPriority = false;
-            return (true, $"Task unprioritized.");
+            return new CommandResult($"Task [yellow]{res.Task.Id}[reset] is no longer a priority.");
         }
 
 
         //
         // Sets status for a task
         //
-        public (bool, string) Status(string[] args)
+        public CommandResult Status(string[] args)
         {
-            TaskResponse res = GetTask(args[0]);
+            TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {
-                return (res.Success, res.Message);
+                return new CommandResult(res.Success, res.Message);
             }
             res.Task!.Status = args[1];
-            return (true, $"Status set.");
+            return new CommandResult($"Status set to [blue]{args[1]}[reset] for task [yellow]{res.Task.Id}[reset]");
         }
-
-
-
-
-
     }
-
 
 }
