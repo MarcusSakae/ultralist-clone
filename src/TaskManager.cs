@@ -108,6 +108,10 @@ namespace Cheap.Ultralist.KnockOff
         //
         public CommandResult AddNote(string[] args)
         {
+            if (args.Length < 2)
+            {
+                return new CommandResult(false, "You must specify a task id and a note");
+            }
             TaskResult res = GetTask(args[0]);
             if (!res.Success)
             {

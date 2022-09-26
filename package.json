@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "dotnet build -c Release",
-    "poststart": "cp bin/Release/net6.0/* c:/tools/ul"
+    "poststart": "cp bin/Release/net6.0/* c:/tools/ul",
+    "test": "dotnet test -l:\"console;verbosity=normal\""
   },
   "author": "",
   "license": "ISC"

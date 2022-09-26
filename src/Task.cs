@@ -4,16 +4,31 @@ class Task
     public string Text { get; set; }
     public string? Status { get; set; }
     public List<string> Notes { get; set; } = new();
-    public DateTime? DueDate { get; set; }
+    public List<string> Projects { get; set; } = new();  // i.e. +project +devops
+    public List<string> Contexts { get; set; } = new();  // i.e. @work @bob 
     public DateTime CreatedAt { get; set; }
+    public DateTime? DueDate { get; set; }
+    public DateTime? CompletedAt { get; set; }
     public bool IsCompleted { get; set; }
     public bool IsArchived { get; set; }
     public bool IsPriority { get; set; }
 
     public Task(string text)
     {
-        Text = text;
         CreatedAt = DateTime.Now;
+        
+        // Collect projects and contexts
+        Projects = text.Split(" ").Where(x => x.StartsWith("+")).ToList();
+        Contexts = text.Split(" ").Where(x => x.StartsWith("@")).ToList();
+        
+        // parse due date and remove from text
+        string? dueDate = text.Split(" ").FirstOrDefault(x => x.StartsWith("due:"));
+        if (dueDate != null)
+        {
+            text = text.Replace(dueDate, "");
+            DueDate = DateTime.Parse(dueDate.Replace("due:", ""));
+        }  
+        Text = text;  
     }
 
     public Task() : this("")

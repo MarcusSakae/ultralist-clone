@@ -4,7 +4,8 @@ namespace Cheap.Ultralist.KnockOff
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        // We make main public to allow testing
+        public static void Main(string[] args)
         {
             FileManager fileManager = new();
             TaskManager taskManager = new(fileManager, args.Contains("--notes"));
@@ -52,7 +53,7 @@ namespace Cheap.Ultralist.KnockOff
             cm.Register("deletenote", tm.DeleteNote, "Deletes a note from a task");
             cm.Register("edit", tm.Edit, "Edits task");
             cm.Register("editnote", tm.EditNote, "Edits a note from a task");
-            cm.Register("help", cm.ShowHelp, "Show this help message", false);
+            cm.Register("help", cm.ShowHelp, "Show this help message", true, false);
             cm.Register("init", fm.Init, "Initialize a new tasks.json in the current directory", true, false);
             cm.Register("list", tm.List, "List all tasks", false);
             cm.Register("prioritize", tm.Prioritize, "Prioritizes a task");
