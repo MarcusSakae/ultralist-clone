@@ -1,5 +1,5 @@
 ﻿# Cheap Ultralist Knock off
-![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg) <-- See! Automatic testing on commit is working!!
+Automatic testing on commit: ![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg) 
 
 Get the real thing over here: https://ultralist.io/
 
