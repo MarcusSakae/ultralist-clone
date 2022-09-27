@@ -4,9 +4,10 @@ namespace Cheap.Ultralist.KnockOff
 {
     class UlConsole
     {
+        // We use some ascii escape codes to color the output.
+        // Allows us to embed colors in the string.
         public static void Output(List<string> results, bool useColor)
         {
-            // We use some ascii escape codes to color the output.
             var colors = new Dictionary<string, string> {
                 { "[blue]", "\u001b[34m" },
                 { "[green]", "\u001b[32m" },
@@ -30,7 +31,7 @@ namespace Cheap.Ultralist.KnockOff
                 string replaced = useColor
                     ? colors.Aggregate(line, (current, color) => current.Replace(color.Key, color.Value))
                     : no_colors.Aggregate(line, (current, color) => current.Replace(color.Key, color.Value));
-               Console.WriteLine(replaced);
+                Console.WriteLine(replaced);
             }
 
         }

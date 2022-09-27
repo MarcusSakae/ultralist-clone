@@ -25,12 +25,13 @@
 
 # For the future... 
 
-    - c# does some special things to symbols in command line arguments, we probably need to use
-    pinvoke commands to be able to use "@" for contexts. We'll just leave that for another day...
+    - Instead of "@context", we are using "*context" because of how c# handles command line arguments.
+    I think we need to use pinvoke commands to be able to pass in "@" and other symbols. 
+    We'll just leave that for another day...
     https://www.pinvoke.net/default.aspx/kernel32/GetCommandLine.html
 
-    - (Todo?) We have so many command callbacks that operates on a task. We should add one more 
-    callback type just for those so we don't have to 'GetTask()' and check result in each callback.
+    - We have many command callbacks that operates on a task. We should add a callback type just
+    for those so we don't have to 'GetTask()' and check result in each and every command.
 
     - JsonSerializer converts "+" to "\u002B", we'll live with it for now, but maybe there is some 
     option we can pass in if we look around.

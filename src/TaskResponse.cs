@@ -1,5 +1,6 @@
 namespace Cheap.Ultralist.KnockOff
 {
+    // Response for when getting a tasks from the task manager
     public class TaskResult
     {
         public bool Success { get; set; } = false;
