@@ -18,4 +18,6 @@ Get the real thing over here: https://ultralist.io/
     - [] human readable dates ("tomorrow", "tom")
     - [] Server interactions (sync, auth)
     
-    - [x] Integration tests. A few tests has been added, status: ![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg)
+    - [x] Integration tests. A few tests has been added.
+
+![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg)
