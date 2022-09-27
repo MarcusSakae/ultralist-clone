@@ -46,7 +46,6 @@ namespace Cheap.Ultralist.KnockOff
 
 
         // Register all commands that the user can call upon
-        // Short variable names are used to reduce some of the verbosity.
         private static void RegisterCommands(FileManager fm, TaskManager tm, CommandManager cm)
         {
             cm.Register("add", tm.AddTask, "Add a task");

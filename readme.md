@@ -16,7 +16,7 @@
     - [x] Context and projects
     - [x] Integration tests. (A few tests has been added.)
     - [x] Parse due dates from input
-    - [] human readable dates ("tomorrow", "tom")
+    - [] human readable dates ("tomorrow", "tom") 
     - [] show expired dates in red
     - [] List by group. group:context group:project
     - [] Server interactions (sync, auth)
