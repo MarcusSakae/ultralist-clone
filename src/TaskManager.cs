@@ -26,23 +26,15 @@ namespace Cheap.Ultralist.KnockOff
         private TaskResult GetTask(string presumablyAnId)
         {
             TaskResult result = new();
-            int taskId;
-            if (!int.TryParse(presumablyAnId, out taskId))
-            {
-                result.Message = "Could not parse todo ID:" + presumablyAnId;
-            }
-            else
+
+            if (int.TryParse(presumablyAnId, out int taskId))
             {
                 result.Task = _tasks.Find(t => t.Id == taskId);
-                if (result.Task == null)
-                {
-                    result.Message = $"No todo with that id.";
-                }
-                else
-                {
-                    result.Success = true;
-                }
             }
+            result.Success = result.Task != null;
+            result.Message = result.Task == null
+                ? $"No todo with that id, or unable to parse: '{presumablyAnId}'"
+                : "";
             return result;
         }
 
@@ -59,29 +51,39 @@ namespace Cheap.Ultralist.KnockOff
             {
                 loadedTasks = JsonSerializer.Deserialize<List<Task>>(jsonString);
             }
-            catch (JsonException e)
-            {
-                Debug.WriteLine(e);
-                return new CommandResult(false, "tasks.json is not valid JSON");
-            }
             catch (Exception e)
             {
                 Debug.WriteLine(e);
-                return new CommandResult(false, "Unknown error loading tasks.json");
+                return new CommandResult(false, "Unable to load tasks.json");
             }
             if (loadedTasks == null)
             {
                 return new CommandResult(false, "Could not load any tasks. Is tasks.json is tasks empty?");
             }
             _tasks = loadedTasks;
+            
+            // We parse tags again after loading (tags were also parsed when task was added), 
+            // in case someone has edited the json file externallly.
+            ParseTags();
+
             return new CommandResult();
         }
 
+        // Save to file
         public CommandResult SaveTasks(string[] args)
         {
             string jsonString = JsonSerializer.Serialize(_tasks);
             _fileManager.Save(jsonString);
             return new CommandResult();
+        }
+
+        // Parse projects and contexts for every task
+        private void ParseTags()
+        {
+            foreach (Task task in _tasks)
+            {
+                task.ParseContent();
+            }
         }
 
 
@@ -102,9 +104,8 @@ namespace Cheap.Ultralist.KnockOff
             return new CommandResult(response);
         }
 
-
         //
-        //
+        // Adds a note to a task
         //
         public CommandResult AddNote(string[] args)
         {
@@ -113,15 +114,10 @@ namespace Cheap.Ultralist.KnockOff
                 return new CommandResult(false, "You must specify a task id and a note");
             }
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.Notes.Add(string.Join(" ", args[1..]));
             return new CommandResult($"Added note to task [yellow]{res.Task.Id}[reset]");
         }
-
-
 
         //
         // Archives a task
@@ -129,10 +125,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult Archive(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.IsArchived = true;
             return new CommandResult($"Archived task [yellow]{res.Task.Id}[reset]");
         }
@@ -143,10 +136,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult Unarchive(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.IsArchived = false;
             return new CommandResult(true, $"Unarchived task [yellow]{res.Task.Id}[reset]");
         }
@@ -168,10 +158,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult Complete(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.IsCompleted = true;
             return new CommandResult($"Marked task [yellow]'{res.Task.Id}'[reset] as completed.");
         }
@@ -182,10 +169,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult Uncomplete(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.IsCompleted = false;
             return new CommandResult($"Marked task [yellow]'{res.Task.Id}'[reset] as not completed.");
         }
@@ -197,10 +181,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult DeleteNote(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.Notes.RemoveAt(int.Parse(args[1]));
             return new CommandResult($"Deleted note [blue]{args[1]}[reset] from task [yellow]{res.Task.Id}[reset]");
         }
@@ -211,10 +192,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult EditNote(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.Notes[int.Parse(args[1])] = string.Join(" ", args[2..]);
             return new CommandResult($"Note edited.");
         }
@@ -225,10 +203,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult Edit(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.Text = string.Join(" ", args[1..]);
             return new CommandResult($"Task [yellow]{res.Task.Id}[reset] updated.");
         }
@@ -239,10 +214,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult Delete(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             int id = res.Task!.Id;
             _tasks.Remove(res.Task!);
             return new CommandResult($"Task [yellow]{id}[reset] deleted.");
@@ -254,10 +226,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult Prioritize(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.IsPriority = true;
             return new CommandResult($"Task [yellow]{res.Task.Id}[reset] is now a priority.");
         }
@@ -268,10 +237,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult Unprioritize(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.IsPriority = false;
             return new CommandResult($"Task [yellow]{res.Task.Id}[reset] is no longer a priority.");
         }
@@ -283,10 +249,7 @@ namespace Cheap.Ultralist.KnockOff
         public CommandResult Status(string[] args)
         {
             TaskResult res = GetTask(args[0]);
-            if (!res.Success)
-            {
-                return new CommandResult(res.Success, res.Message);
-            }
+            if (!res.Success) return new CommandResult(res);
             res.Task!.Status = args[1];
             return new CommandResult($"Status set to [blue]{args[1]}[reset] for task [yellow]{res.Task.Id}[reset]");
         }

@@ -42,10 +42,11 @@ namespace Cheap.Ultralist.KnockOff
         // Registers a command
         public void Register(
             string commandName,
-            CommandCallback callback,
-            string description,
-            bool exhausts = false,
-            bool modifiesTasks = true)
+            CommandCallback callback,   // 
+            string description,         // Description (shown in help)
+            bool exhausts = false,      // Should we exhaust the queue?
+            bool modifiesTasks = true   // Should we mark tasks as modified? (
+        )
         {
             var command = new Command(commandName, callback);
             command.Description = description;

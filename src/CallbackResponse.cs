@@ -11,10 +11,17 @@ namespace Cheap.Ultralist.KnockOff
             Message = message;
         }
 
+        // Converts TaskResult to CommandResult
+        public CommandResult(TaskResult res) : this(res.Success, res.Message)
+        {
+        }
+
+        // Only message == OK
         public CommandResult(string message) : this(true, message)
         {
         }
 
+        // No argument = OK
         public CommandResult() : this(true, "")
         {
         }

@@ -1,7 +1,9 @@
-class Task
+using System.Runtime.Serialization;
+
+public class Task
 {
     public int Id { get; set; }
-    public string Text { get; set; }
+    public string Text { get; set; } = "";
     public string? Status { get; set; }
     public List<string> Notes { get; set; } = new();
     public List<string> Projects { get; set; } = new();  // i.e. +project +devops
@@ -16,29 +18,13 @@ class Task
     public Task(string text)
     {
         CreatedAt = DateTime.Now;
-        
-        // Collect projects and contexts
-        Projects = text.Split(" ").Where(x => x.StartsWith("+")).ToList();
-        Contexts = text.Split(" ").Where(x => x.StartsWith("@")).ToList();
-        
-        // parse due date and remove from text
-        string? dueDate = text.Split(" ").FirstOrDefault(x => x.StartsWith("due:"));
-        if (dueDate != null)
-        {
-            text = text.Replace(dueDate, "");
-            DueDate = DateTime.Parse(dueDate.Replace("due:", ""));
-        }  
-        Text = text;  
+        Text = text;
     }
 
     public Task() : this("")
     {
     }
 
-    public string CleanText()
-    {
-        return Text.Replace("", "").Trim();
-    }
 
     //
     // Returns task as a string
@@ -48,7 +34,20 @@ class Task
     {
         string completed = IsCompleted ? "✔️" : "　"; // note utf8 space (to keep alignment)
         string date = DueDate != null ? DueDate.Value.ToString("ddd MMM dd") : "";
-        return $"[yellow]{Id.ToString().PadRight(4)} [reset][{completed}]  [red]{date}\t[blue]{Status}\t[reset]{Text}";
+        string status = Status ?? "";
+        string result =
+            $"[yellow]{Id.ToString().PadRight(4)} [reset][{completed}]  "
+            + $"[blue]{date.PadRight(12)}[green]{status} [reset]{Text}";
+
+        foreach (string project in Projects)
+        {
+            result = result.Replace(project, $"[red]{project}[reset]");
+        }
+        foreach (string context in Contexts)
+        {
+            result = result.Replace(context, $"[purple]{context}[reset]");
+        }
+        return result;
     }
 
     //
@@ -63,5 +62,18 @@ class Task
             result[i] = $"  [blue]{i.ToString().PadRight(4)} [reset]{Notes[i]}";
         }
         return string.Join("\n", result) + (Notes.Count > 0 ? "\n" : "");
+    }
+
+    public void ParseContent()
+    {
+        string[] words = Text.Split(' ');
+        Contexts = words.Where(x => x.StartsWith("*")).ToList();
+        Projects = words.Where(x => x.StartsWith("+")).ToList();
+        string? dueDate = words.FirstOrDefault(x => x.StartsWith("due:"));
+        if (dueDate != null)
+        {
+            DueDate = DateTime.Parse(dueDate[4..]);
+            Text = Text.Replace(dueDate, "");
+        }
     }
 }

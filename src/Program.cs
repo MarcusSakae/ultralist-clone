@@ -1,9 +1,13 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Cheap.Ultralist.KnockOff
 {
+
+
     internal class Program
     {
+
         // We make main public to allow testing
         public static void Main(string[] args)
         {
@@ -17,18 +21,19 @@ namespace Cheap.Ultralist.KnockOff
 
             // Parse the arguments and fill up the command queue
             commandManager.ParseArgs(args);
-           
+
             // We only want to load tasks if the command manager is not flagged as exhausted
             // i.e.: No need to load anything if the user just wants to see the help message
             if (!commandManager.Exhausted)
             {
+                // "LoadTasks" should now be FIRST in the queue
                 commandManager.InsertCommand(new Command("LoadTasks", taskManager.LoadTasks));
             }
 
             // We only want to save to disk if any of the commands actually modifies the tasks            
-            // Note that we queue this up before any of the commands are executed.
             if (commandManager.ModifiedTasks)
             {
+                // SaveTasks should now be LAST in the queue.
                 commandManager.QueueCommand(new Command("SaveTasks", taskManager.SaveTasks));
             }
 

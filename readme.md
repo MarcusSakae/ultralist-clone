@@ -2,21 +2,35 @@
 
 - Get the real thing over here: https://ultralist.io/
 
-- Automatic testing on commit: ![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg) 
+- Automatic testing on commit: ![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg)
 
-## Usage examples: 
-    
+## Usage examples:
+
     ul a some task      // Create new task
     ul l                // List Tasks
     ul c 1              // Mark task #1 as completed
-    ul a +devops make @bob a sysadmin due tom
-
+    ul a +devops make *bob a sysadmin due tom
 
 # Todo
 
-    - [] Context and projects
-    - [] Parse due dates from input
+    - [x] Context and projects
+    - [x] Integration tests. (A few tests has been added.)
+    - [x] Parse due dates from input
     - [] human readable dates ("tomorrow", "tom")
+    - [] show expired dates in red
+    - [] List by group. group:context group:project
     - [] Server interactions (sync, auth)
-    
-    - [x] Integration tests. A few tests has been added.
+    - [] detailed help for each command, i.e. 'ul help add'
+    - [] A heap of bugs...
+
+# For the future... 
+
+    - c# does some special things to symbols in command line arguments, we probably need to use
+    pinvoke commands to be able to use "@" for contexts. We'll just leave that for another day...
+    https://www.pinvoke.net/default.aspx/kernel32/GetCommandLine.html
+
+    - (Todo?) We have so many command callbacks that operates on a task. We should add one more 
+    callback type just for those so we don't have to 'GetTask()' and check result in each callback.
+
+    - JsonSerializer converts "+" to "\u002B", we'll live with it for now, but maybe there is some 
+    option we can pass in if we look around.

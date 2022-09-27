@@ -1,17 +1,6 @@
 namespace Cheap.Ultralist.KnockOff
 {
 
-    public enum ArgumentType
-    {
-        // For example "help" or "version", which don't require any arguments
-        None,
-        // For example "add <name> <text>" where text is optional
-        // "word" is ended by a single space. 
-        // Text is either to the end of arguments or enclosed within quotes.
-        WordPlusOptionalText,
-        TextArgument
-    }
-
 
     // To be able to use callbacks later, we need to match the function signatures.
     // Thus, we provide a delegate for each type of command.
@@ -21,10 +10,9 @@ namespace Cheap.Ultralist.KnockOff
     public delegate CommandResult CommandCallback(string[] args);
     public delegate CommandResult CommandCallbackId(int id, string[] args);
 
-    internal class Command
+    class Command
     {
         public int? Id { get; set; } = null;
-
 
         public string Name { get; set; } = "";
 
@@ -37,9 +25,6 @@ namespace Cheap.Ultralist.KnockOff
         public List<string> Aliases = new();
 
         public String[] Arguments = new String[0];
-
-        // Todo: Maybe remove
-        public ArgumentType ArgumentType { get; set; } = ArgumentType.None;
 
         // The callback that is called when the command is executed
         private CommandCallback _callback;
@@ -58,13 +43,13 @@ namespace Cheap.Ultralist.KnockOff
         }
 
         // Adds an alias to the command
-        internal void AddAlias(string alias)
+        public void AddAlias(string alias)
         {
             Aliases.Add(alias.ToLower());
         }
 
         // Executes the command
-        internal CommandResult Run()
+        public CommandResult Run()
         {
             return _callback(Arguments);
         }
