@@ -17,4 +17,5 @@ Get the real thing over here: https://ultralist.io/
     - [] Parse due dates from input
     - [] human readable dates ("tomorrow", "tom")
     - [] Server interactions (sync, auth)
-    - [] Integration tests
+    
+    - [x] Integration tests. A few tests has been added, status: ![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg)
