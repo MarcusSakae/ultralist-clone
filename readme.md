@@ -1,4 +1,5 @@
-﻿# Cheap Ultralist Knock off
+﻿![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg)
+# Cheap Ultralist Knock off
 
 Get the real thing over here: https://ultralist.io/
 
@@ -19,5 +20,3 @@ Get the real thing over here: https://ultralist.io/
     - [] Server interactions (sync, auth)
     
     - [x] Integration tests. A few tests has been added.
-
-![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg)
