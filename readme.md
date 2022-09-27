@@ -9,7 +9,7 @@
     ul a some task      // Create new task
     ul l                // List Tasks
     ul c 1              // Mark task #1 as completed
-    ul a +devops make *bob a sysadmin due tom
+    ul a +devops make *bob a sysadmin due:2023-12-10
 
 # Todo
 
