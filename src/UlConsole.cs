@@ -32,6 +32,7 @@ namespace Cheap.Ultralist.KnockOff
                     ? colors.Aggregate(line, (current, color) => current.Replace(color.Key, color.Value))
                     : no_colors.Aggregate(line, (current, color) => current.Replace(color.Key, color.Value));
                 Console.WriteLine(replaced);
+
             }
 
         }

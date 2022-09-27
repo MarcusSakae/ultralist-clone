@@ -3,10 +3,15 @@
 - Get the real thing over here: https://ultralist.io/
 
 - Automatic testing on commit: ![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg)
+## Install
+
+    dotnet restore
+    
+
 
 ## Usage examples:
 
-    ul a some task      // Create new task
+    dotnet run a some task      // Create new task
     ul l                // List Tasks
     ul c 1              // Mark task #1 as completed
     ul a +devops make *bob a sysadmin due:2023-12-10
