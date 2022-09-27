@@ -1,8 +1,8 @@
 ﻿# Cheap Ultralist Knock off
-Automatic testing on commit: ![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg) 
 
-Get the real thing over here: https://ultralist.io/
+- Get the real thing over here: https://ultralist.io/
 
+- Automatic testing on commit: ![](https://github.com/MarcusSakae/ultralist-clone/actions/workflows/dotnet.yml/badge.svg) 
 
 ## Usage examples: 
     
